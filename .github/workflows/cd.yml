@@ -1,0 +1,125 @@
+name: CD — Deploy to Azure Databricks
+
+on:
+  workflow_dispatch:  # Manuel uniquement
+    inputs:
+      run_pipeline:
+        description: 'Run full pipeline after deploy? (true/false)'
+        required: true
+        default: 'false'
+        type: choice
+        options:
+          - 'false'
+          - 'true'
+
+jobs:
+  deploy:
+    name: Deploy to Databricks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install databricks-sdk
+
+      - name: Upload src/ to Databricks Workspace
+        env:
+          DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
+          DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
+        run: |
+          python - <<'EOF'
+          import os, base64
+          from databricks.sdk import WorkspaceClient
+          from databricks.sdk.service.workspace import ImportFormat, Language
+          from pathlib import Path
+
+          client = WorkspaceClient(
+              host=os.environ["DATABRICKS_HOST"],
+              token=os.environ["DATABRICKS_TOKEN"],
+          )
+          me = client.current_user.me()
+          base = f"/Users/{me.user_name}/fraud-pipeline"
+
+          uploaded = 0
+          for folder in ["src", "config", "scripts"]:
+              for file in Path(folder).rglob("*.py"):
+                  rel = file.relative_to(Path("."))
+                  ws_path = f"{base}/{rel}".replace("\\", "/")
+                  parent = "/".join(ws_path.split("/")[:-1])
+                  try:
+                      client.workspace.mkdirs(parent)
+                  except:
+                      pass
+                  with open(file, "rb") as f:
+                      content = base64.b64encode(f.read()).decode()
+                  client.workspace.import_(
+                      path=ws_path,
+                      content=content,
+                      format=ImportFormat.SOURCE,
+                      language=Language.PYTHON,
+                      overwrite=True,
+                  )
+                  uploaded += 1
+                  print(f"  ✓ {ws_path}")
+
+          # Upload config YAML files
+          for file in Path("config").rglob("*.yml"):
+              rel = file.relative_to(Path("."))
+              ws_path = f"{base}/{rel}".replace("\\", "/")
+              with open(file, "rb") as f:
+                  content = base64.b64encode(f.read()).decode()
+              client.workspace.import_(
+                  path=ws_path,
+                  content=content,
+                  format=ImportFormat.AUTO,
+                  overwrite=True,
+              )
+              uploaded += 1
+              print(f"  ✓ {ws_path}")
+
+          print(f"\nDeployed {uploaded} files to {base}")
+          EOF
+
+      - name: Run pipeline (optional)
+        if: ${{ github.event.inputs.run_pipeline == 'true' }}
+        env:
+          DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
+          DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
+          DATABRICKS_CLUSTER_ID: ${{ secrets.DATABRICKS_CLUSTER_ID }}
+        run: |
+          python - <<'EOF'
+          import os
+          from databricks.sdk import WorkspaceClient
+          from databricks.sdk.service import jobs
+
+          client = WorkspaceClient(
+              host=os.environ["DATABRICKS_HOST"],
+              token=os.environ["DATABRICKS_TOKEN"],
+          )
+          me = client.current_user.me()
+          notebook_path = f"/Users/{me.user_name}/fraud-pipeline/pipeline_notebook"
+          cluster_id = os.environ["DATABRICKS_CLUSTER_ID"]
+
+          print(f"Submitting notebook run: {notebook_path}")
+          run = client.jobs.submit(
+              run_name="CD-pipeline-run",
+              tasks=[
+                  jobs.SubmitTask(
+                      task_key="pipeline",
+                      notebook_task=jobs.NotebookTask(
+                          notebook_path=notebook_path,
+                      ),
+                      existing_cluster_id=cluster_id,
+                  )
+              ]
+          ).result()
+
+          print(f"Run state: {run.state.result_state}")
+          if str(run.state.result_state) != "RunResultState.SUCCESS":
+              exit(1)
+          print("Pipeline completed successfully!")
+          EOF
