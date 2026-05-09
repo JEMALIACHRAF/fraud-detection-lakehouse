@@ -20,16 +20,9 @@ from src.common.config import (
 
 @pytest.fixture(scope="session")
 def spark():
-    """Local Spark session for unit tests."""
     return (
         SparkSession.builder
         .master("local[2]")
-        .appName("test-fraud-pipeline")
-        .config("spark.sql.extensions", "io.delta.sql.DeltaSparkSessionExtension")
-        .config(
-            "spark.sql.catalog.spark_catalog",
-            "org.apache.spark.sql.delta.catalog.DeltaCatalog"
-        )
         .config("spark.sql.shuffle.partitions", "4")
         .getOrCreate()
     )
