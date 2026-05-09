@@ -378,9 +378,18 @@ Coverage threshold: **70% minimum** on `src/`.
 **Structured JSON logging** — all logs are machine-parseable and compatible with GCP Cloud Logging. Enables log-based alerting and dashboards without code changes.
 
 ---
+## Author
+
+**Achraf Jemali** — Data & AI Engineer
+
+
+[![GitHub](https://img.shields.io/badge/GitHub-JEMALIACHRAF-black?logo=github)](https://github.com/JEMALIACHRAF)
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-Achraf_Jemali-0077B5?logo=linkedin)](https://linkedin.com/in/achraf-jemali-54a417239)
+
+---
 
 <div align="center">
 
-Built with Databricks · Delta Lake · MLflow · GCP · ☕
+Built with Databricks · Delta Lake · MLflow · GCP · 
 
 </div>
