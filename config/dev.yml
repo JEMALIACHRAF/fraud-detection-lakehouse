@@ -1,0 +1,37 @@
+gcs:
+  bucket: "fraud-lakehouse-dev"
+  bronze_prefix: "bronze/transactions"
+  silver_prefix: "silver/transactions"
+  gold_prefix: "gold/features"
+
+database:
+  host: "localhost"
+  port: 5432
+  database: "fraud_db"
+  username: "fraud_user"
+  password: "${DB_PASSWORD}"
+  schema: "public"
+
+databricks:
+  host: "${DATABRICKS_HOST}"
+  token: "${DATABRICKS_TOKEN}"
+  cluster_id: "${DATABRICKS_CLUSTER_ID}"
+  mlflow_tracking_uri: "databricks"
+
+bigquery:
+  project_id: "${GCP_PROJECT_ID}"
+  dataset: "fraud_detection_dev"
+  location: "EU"
+
+ml:
+  experiment_name: "fraud_detection_dev"
+  model_name: "fraud_classifier_dev"
+  test_size: 0.2
+  random_state: 42
+  n_estimators: 100
+  max_depth: 5
+  fraud_threshold: 0.5
+
+batch_size: 10000
+max_retries: 2
+retry_delay_seconds: 10

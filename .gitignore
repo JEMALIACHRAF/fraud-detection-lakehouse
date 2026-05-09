@@ -1,0 +1,43 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+venv/
+env/
+.venv/
+
+# dbt / Spark artifacts
+target/
+*.egg-info/
+dist/
+build/
+
+# Config secrets
+config/local.yml
+.env
+*.json
+gcp-key*
+*credentials*
+
+# Test artifacts
+.pytest_cache/
+.coverage
+coverage.xml
+htmlcov/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Databricks
+.databricks/
+.env 
+data/
+mlflow_runs/

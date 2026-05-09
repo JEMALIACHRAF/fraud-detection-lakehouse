@@ -1,0 +1,37 @@
+gcs:
+  bucket: "${GCS_BUCKET}"
+  bronze_prefix: "bronze/transactions"
+  silver_prefix: "silver/transactions"
+  gold_prefix: "gold/features"
+
+database:
+  host: "${DB_HOST}"
+  port: "${DB_PORT}"
+  database: "${DB_NAME}"
+  username: "${DB_USER}"
+  password: "${DB_PASSWORD}"
+  schema: "public"
+
+databricks:
+  host: "${DATABRICKS_HOST}"
+  token: "${DATABRICKS_TOKEN}"
+  cluster_id: "${DATABRICKS_CLUSTER_ID}"
+  mlflow_tracking_uri: "databricks"
+
+bigquery:
+  project_id: "${GCP_PROJECT_ID}"
+  dataset: "fraud_detection"
+  location: "EU"
+
+ml:
+  experiment_name: "fraud_detection"
+  model_name: "fraud_classifier"
+  test_size: 0.2
+  random_state: 42
+  n_estimators: 300
+  max_depth: 8
+  fraud_threshold: 0.5
+
+batch_size: 100000
+max_retries: 3
+retry_delay_seconds: 30
