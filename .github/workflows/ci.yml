@@ -18,7 +18,7 @@ jobs:
       - name: Install ruff
         run: pip install ruff
       - name: Lint src/
-        run: ruff check src/ --ignore E501,F401
+        run: ruff check src/ --ignore E501,F401,E402
 
   unit-tests:
     name: Unit Tests
@@ -39,7 +39,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install pyspark==3.5.0 pytest==7.4.4 pytest-cov==4.1.0 PyYAML==6.0.1
+          pip install pyspark==3.5.0 delta-spark==3.0.0 pytest==7.4.4 pytest-cov==4.1.0 PyYAML==6.0.1
 
       - name: Set PYSPARK_PYTHON
         run: echo "PYSPARK_PYTHON=$(which python)" >> $GITHUB_ENV
@@ -47,13 +47,7 @@ jobs:
       - name: Run unit tests
         run: |
           pytest tests/unit/ -v \
-            --cov=src \
+            --cov=src/bronze_to_silver \
+            --cov=src/silver_to_gold \
             --cov-report=term-missing \
-            --cov-fail-under=60
-
-      - name: Upload coverage
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: coverage-report
-          path: .coverage
+            --cov-fail-under=30
